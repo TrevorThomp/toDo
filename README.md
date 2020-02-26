@@ -5,10 +5,9 @@
 ### Author: Trevor Thompson
 
 ### Links and Resources
-* [submission PR](https://github.com/trevorthompson-401-advanced-javascript/RESTy/pull/1)
+* [submission PR](https://github.com/TrevorThomp/toDo/pull/1)
 * [travis](https://travis-ci.com/trevorthompson-401-advanced-javascript/RESTy)
-* [Code Sandbox](https://codesandbox.io/s/github/trevorthompson-401-advanced-javascript/RESTy)
-* [Netlify](https://eager-allen-d42258.netlify.com/)
+* [Code Sandbox](https://codesandbox.io/s/github/TrevorThomp/toDo/tree/master/)
 
 ### Setup
 * `npm install`
