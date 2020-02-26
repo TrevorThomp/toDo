@@ -15,8 +15,8 @@ const ToDo = () => {
   const [todoList, setToDoList] = useState([]);
   const [showDetails, setShowDetails] = useState(false);
   const [showItem, setShowItem] = useState({});
-  const [itemsPerPage, setItemsPerPage] = useState(3);
-  const { request, response, error, isLoading } = useFetch();
+  const [itemsPerPage] = useState(3);
+  const { request, response} = useFetch();
 
   const _addItem = item => {
     const addRequest = {
