@@ -1,4 +1,4 @@
-# LAB - 33
+# LAB - 34
 
 ## toDo
 
@@ -6,7 +6,7 @@
 
 ### Links and Resources
 * [submission PR](https://github.com/TrevorThomp/toDo/pull/1)
-* [Code Sandbox](https://codesandbox.io/s/github/TrevorThomp/toDo/tree/master/)
+* [Code Sandbox](https://codesandbox.io/s/todo-application-x1fpf)
 
 ### Setup
 * `npm install`
