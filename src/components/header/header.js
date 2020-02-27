@@ -1,17 +1,12 @@
 import React from "react";
-import "../header/header.scss";
+import "./header.scss";
 
-/**
- * Header component
- * @description returns a header tag with the title of RESTy
- */
-
-function Header() {
+const Header = () => {
   return (
     <header>
-      <h1>ToDoy</h1>
+      <h1>Todo App</h1>
     </header>
   );
-}
+};
 
 export default Header;
