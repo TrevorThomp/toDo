@@ -1,139 +1,283 @@
-import React, { useEffect, useState, useContext } from "react";
-import useFetch from "../../hooks/fetch.js";
-import { When } from "../if";
-import TodoForm from "./form.js";
-import TodoList from "./list.js";
-import TodoItem from "./item.js";
+import React, { useState, useEffect, useContext } from "react";
+import useForm from "../hooks/useForm";
+import { When, If, Then, Else } from "../if";
+import Modal from "../modal";
+import useFetch from "../hooks/useFetch";
+import { SettingsContext } from "../../context/settings";
+import { LoginContext } from "../../auth/login";
+import Auth from "../../auth/auth";
 
 import "./todo.scss";
-import { SettingsContext } from "../../context/context";
 
-const todoAPI = "https://api-js401.herokuapp.com/api/v1/todo";
+const ToDo = props => {
+  const settingsContext = useContext(SettingsContext);
 
-const ToDo = () => {
-  const settings = useContext(SettingsContext);
-  const [todoList, setToDoList] = useState([]);
+  const [todoList, setTodoList] = useState([]);
   const [showDetails, setShowDetails] = useState(false);
-  const [showItem, setShowItem] = useState({});
-  const [itemsPerPage, setItemsPerPage] = useState(3);
-  const { request, response, error, isLoading } = useFetch();
+  const [details, setDetails] = useState({});
+  const [handleSubmit, handleChange, values] = useForm(addItem);
+  const [setRequest, response, error, isLoading] = useFetch();
 
-  const _addItem = item => {
-    const addRequest = {
-      url: todoAPI,
-      options: {
-        method: "post",
-        body: JSON.stringify(item)
-      }
-    };
-    request(addRequest);
-  };
+  const url = "https://api-js401.herokuapp.com/api/v1/todo";
 
-  const _deleteItem = id => {
-    const deleteRequest = {
-      url: `${todoAPI}/${id}`,
-      options: {
-        method: "delete"
-      }
-    };
-    request(deleteRequest);
-  };
-
-  const _toggleComplete = id => {
-    let item = todoList.filter(i => i._id === id)[0] || {};
-    item.complete = !item.complete;
-    const updateRequest = {
-      url: `${todoAPI}/${id}`,
-      options: {
-        method: "put",
-        body: JSON.stringify(item)
-      }
-    };
-    request(updateRequest);
-  };
-
-  const _toggleDetails = id => {
-    setShowDetails(!showDetails); //whatever
-    let item = todoList.filter(item => item._id === id)[0];
-    setShowItem(item);
-  };
-
-  // The function to re-fetch data so the display is current
-  // Called on intial load and afer every write operation
-  const _getAll = () => {
-    const req = {
-      url: todoAPI,
-      options: {
-        method: "get"
-      }
-    };
-    request(req);
-  };
-
-  // On mount ... get the list
+  // set todo list from data if data exists else get all
   useEffect(() => {
-    _getAll();
-  }, []);
-
-  //  Set the full state if it's in the response or re-fetch anytime the response is updated
-  useEffect(() => {
-    // Anytime we get a list, update our state
     if (response.count >= 0) {
-      setToDoList(response.results);
-    }
-    // Otherwise, re-fetch
-    else {
-      _getAll();
+      setTodoList(response.results);
+    } else {
+      getAll();
     }
   }, [response]);
 
+  // update document title
+  useEffect(() => {
+    let complete = todoList.filter(item => !item.complete).length;
+    let incomplete = todoList.filter(item => item.complete).length;
+
+    document.title = `ToDo:${complete} Done:${incomplete}`;
+
+    !settingsContext.displayCompleted
+      ? settingsContext.setCurrentDisplayed(todoList.length)
+      : settingsContext.setCurrentDisplayed(todoList.length - complete);
+  });
+
+  const getAll = () => {
+    const request = {
+      url: url,
+      options: {
+        method: "GET"
+      }
+    };
+    setRequest(request);
+  };
+
+  // get data from API on mount
+  useEffect(() => {
+    getAll();
+  }, []);
+
+  function addItem(data) {
+    const request = {
+      url: url,
+      options: {
+        method: "POST",
+        body: JSON.stringify(data)
+      }
+    };
+    setRequest(request);
+  }
+
+  const deleteItem = id => {
+    console.log(id);
+    const request = {
+      url: `${url}/${id}`,
+      options: {
+        method: "DELETE"
+      }
+    };
+    setRequest(request);
+  };
+
+  const saveItem = updatedItem => {
+    const request = {
+      url: `${url}/${updatedItem._id}`,
+      options: {
+        method: "PUT",
+        body: JSON.stringify(updatedItem)
+      }
+    };
+    setRequest(request);
+  };
+
+  const toggleComplete = id => {
+    let item = todoList.filter(i => i._id === id)[0] || {};
+    if (item._id) {
+      item.complete = !item.complete;
+      saveItem(item);
+    }
+  };
+
+  const toggleDetails = id => {
+    let showDetailsState = !showDetails;
+    let itemDetails = todoList.filter(item => item._id === id)[0] || {};
+
+    setDetails(itemDetails);
+    setShowDetails(showDetailsState);
+  };
+
+  const togglePageNumber = e => {
+    if (e.target.name === "nextButton") {
+      settingsContext.setPageNumber(settingsContext.pageNumber + 1);
+    }
+    if (e.target.name === "prevButton") {
+      settingsContext.setPageNumber(settingsContext.pageNumber - 1);
+    }
+  };
+
+  const toggleHideComplete = e => {
+    if (e.target.name === "hideCompleteButton") {
+      settingsContext.setDisplayCompleted(!settingsContext.displayCompleted);
+    }
+  };
+
   return (
     <>
-      <header>
-        <h2>
-          There are {todoList.filter(item => !item.complete).length} Items To
-          Complete
-        </h2>
-      </header>
+      <Auth capbility="read">
+        <header>
+          <h2>
+            There are {todoList.filter(item => !item.complete).length} Items To
+            Complete
+          </h2>
+        </header>
+      </Auth>
 
       <section className="todo">
-        <div>
-          <TodoForm handleSubmit={_addItem} />
-        </div>
+        <Auth capability="create">
+          <div>
+            <h3>Add Item</h3>
+            <form onSubmit={handleSubmit}>
+              <label>
+                <span>To Do Item</span>
+                <input
+                  name="text"
+                  placeholder="Add To Do List Item"
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                <span>Difficulty Rating</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  name="difficulty"
+                  defaultValue="3"
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                <span>Assigned To</span>
+                <input
+                  type="text"
+                  name="assignee"
+                  placeholder="Assigned To"
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                <span>Due</span>
+                <input type="date" name="due" onChange={handleChange} />
+              </label>
+              <button>Add Item</button>
+            </form>
+          </div>
+        </Auth>
 
-        <div>
-          <TodoList
-            list={todoList}
-            handleComplete={_toggleComplete}
-            handleDelete={_deleteItem}
-            handleDetails={_toggleDetails}
-          />
-        </div>
+        <Auth capbilith="read">
+          <div>
+            <button name="hideCompleteButton" onClick={toggleHideComplete}>
+              Display Completed
+            </button>
+            <ul>
+              <If condition={settingsContext.displayCompleted === true}>
+                <Then>
+                  {todoList
+                    .filter(item => item.complete === false)
+                    .slice(
+                      settingsContext.pageNumber *
+                        settingsContext.itemsDisplayed,
+                      settingsContext.pageNumber *
+                        settingsContext.itemsDisplayed +
+                        settingsContext.itemsDisplayed
+                    )
+                    .map(item => (
+                      <li
+                        className={`complete-${item.complete.toString()}`}
+                        key={item._id}
+                      >
+                        <span onClick={() => toggleComplete(item._id)}>
+                          {item.text}
+                        </span>
+                        <Auth capability="update">
+                          <button onClick={() => toggleDetails(item._id)}>
+                            Details
+                          </button>
+                        </Auth>
+                        <Auth capability="delete">
+                          <button onClick={() => deleteItem(item._id)}>
+                            Delete
+                          </button>
+                        </Auth>
+                      </li>
+                    ))}
+                </Then>
+                <Else>
+                  {todoList
+                    .slice(
+                      settingsContext.pageNumber *
+                        settingsContext.itemsDisplayed,
+                      settingsContext.pageNumber *
+                        settingsContext.itemsDisplayed +
+                        settingsContext.itemsDisplayed
+                    )
+                    .map(item => (
+                      <li
+                        className={`complete-${item.complete.toString()}`}
+                        key={item._id}
+                      >
+                        <span onClick={() => toggleComplete(item._id)}>
+                          {item.text}
+                        </span>
+                        <Auth capability="update">
+                          <button onClick={() => toggleDetails(item._id)}>
+                            Details
+                          </button>
+                        </Auth>
+                        <Auth capability="delete">
+                          <button onClick={() => deleteItem(item._id)}>
+                            Delete
+                          </button>
+                        </Auth>
+                      </li>
+                    ))}
+                </Else>
+              </If>
+              <If condition={settingsContext.pageNumber >= 1}>
+                <Then>
+                  <button name="prevButton" onClick={togglePageNumber}>
+                    Previous
+                  </button>
+                </Then>
+              </If>
+              <If
+                condition={
+                  settingsContext.currentDisplayed > 5 &&
+                  settingsContext.currentDisplayed /
+                    (settingsContext.pageNumber + 1) >
+                    settingsContext.itemsDisplayed
+                }
+              >
+                <Then>
+                  <button name="nextButton" onClick={togglePageNumber}>
+                    Next
+                  </button>
+                </Then>
+              </If>
+            </ul>
+          </div>
+        </Auth>
       </section>
 
-      <div>
-        <div>Total items: {todoList.length}</div>
-        <div>Items per page: {itemsPerPage}</div>
-        <div>Current page is {settings.currentPage + 1}</div>
-        <div>Total pages: {Math.ceil(todoList.length / itemsPerPage)}</div>
-        <When condition={settings.currentPage > 0}>
-          <input
-            type="button"
-            value="back"
-            onClick={() => settings.currentPageSubtract()}
-          />
-        </When>
-        <When condition={(settings.currentPage = 1)}>
-          <input
-            type="button"
-            value="next"
-            onClick={() => settings.currentPageAdd()}
-          />
-        </When>
-      </div>
-
       <When condition={showDetails}>
-        <TodoItem handleDetails={_toggleDetails} item={showItem} />
+        <Modal title="To Do Item" close={toggleDetails}>
+          <div className="todo-details">
+            <header>
+              <span>Assigned To: {details.assignee}</span>
+              <span>Due: {details.due}</span>
+            </header>
+            <div className="item">{details.text}</div>
+          </div>
+        </Modal>
       </When>
     </>
   );
