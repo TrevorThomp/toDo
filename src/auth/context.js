@@ -1,5 +1,4 @@
 import React from "react";
-import jwt from "jsonwebtoken";
 import cookie from "react-cookies";
 
 export const LoginContext = React.createContext();

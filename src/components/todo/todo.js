@@ -4,7 +4,6 @@ import { When, If, Then, Else } from "../if";
 import Modal from "../modal";
 import useFetch from "../hooks/useFetch";
 import { SettingsContext } from "../../context/settings";
-import { LoginContext } from "../../auth/login";
 import Auth from "../../auth/auth";
 
 import "./todo.scss";
@@ -15,8 +14,8 @@ const ToDo = props => {
   const [todoList, setTodoList] = useState([]);
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState({});
-  const [handleSubmit, handleChange, values] = useForm(addItem);
-  const [setRequest, response, error, isLoading] = useFetch();
+  const [handleSubmit, handleChange] = useForm(addItem);
+  const [setRequest, response] = useFetch();
 
   const url = "https://api-js401.herokuapp.com/api/v1/todo";
 
