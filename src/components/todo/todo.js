@@ -26,6 +26,7 @@ const ToDo = props => {
     } else {
       getAll();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   // update document title
@@ -38,6 +39,7 @@ const ToDo = props => {
     !settingsContext.displayCompleted
       ? settingsContext.setCurrentDisplayed(todoList.length)
       : settingsContext.setCurrentDisplayed(todoList.length - complete);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getAll = () => {
@@ -50,8 +52,8 @@ const ToDo = props => {
     setRequest(request);
   };
 
-  // get data from API on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     getAll();
   }, []);
 
