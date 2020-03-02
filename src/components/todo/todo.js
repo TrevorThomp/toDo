@@ -38,7 +38,7 @@ const ToDo = props => {
     !settingsContext.displayCompleted
       ? settingsContext.setCurrentDisplayed(todoList.length)
       : settingsContext.setCurrentDisplayed(todoList.length - complete);
-  });
+  }, []);
 
   const getAll = () => {
     const request = {
