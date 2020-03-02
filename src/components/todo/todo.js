@@ -55,6 +55,7 @@ const ToDo = props => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     getAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function addItem(data) {
